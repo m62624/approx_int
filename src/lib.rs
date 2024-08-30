@@ -153,6 +153,19 @@ impl<T: SpecialBytes> SmallValue<T> {
         }
     }
 
+    /// Returns the approximate value of the number.
+    /// The value is calculated based on the percentage and the minimum number of bits.
+    ///
+    /// ### Example
+    /// ```rust
+    /// let big_value: u128 = 8838183818381831838138182391233;
+    /// let small_value = SmallValue::new(big_value);
+    /// let approx = small_value.approximate();
+    /// // ---- stdout ----
+    /// // The raw value: (103, 87, false)
+    /// // The original value:    8838183818381831838138182391233
+    /// // The approximate value: 8822848225945509419002221297664
+    /// ```
     pub fn approximate(&self) -> T {
         let abs_value =
             Self::calculate_part_from_percentage(self.percent, Self::bit_pow(self.min_bits));
@@ -164,16 +177,19 @@ impl<T: SpecialBytes> SmallValue<T> {
         }
     }
 
+    /// Returns the minimum number of bits required to represent the number.
     #[cfg(not(tarpaulin_include))]
     pub fn min_bits(&self) -> u8 {
         self.min_bits
     }
 
+    /// This percentage is derived from the maximum value of the bit representation
     #[cfg(not(tarpaulin_include))]
     pub fn percent(&self) -> u8 {
         self.percent
     }
 
+    // Returns the flag that indicates whether the number is negative.
     #[cfg(not(tarpaulin_include))]
     pub fn flag(&self) -> bool {
         self.flag

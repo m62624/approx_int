@@ -9,7 +9,7 @@ this bit length, and then finds the nearest percentage value that can
 approximately match the original number. This approximation reduces the
 size of the number, while retaining enough information for practical use.
 
-The compact representation of numbers using a tuple (u8, u8, bool):
+The compact representation of numbers using a tuple `(u8, u8, bool)`:
 
 - `u8` for the number of bits required to store the value.
 - `u8` for the percentage that describes the degree of approximation.
