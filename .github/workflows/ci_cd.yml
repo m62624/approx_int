@@ -117,7 +117,7 @@ jobs:
         run: |
           ls $(pwd); \
           docker pull ${{ env.IMAGE_DOCKER_FRAGMENT }}:latest; \
-          docker run -v "$(pwd):/usr/src/approx_int" ${{ env.IMAGE_DOCKER_FRAGMENT }}:latest \
+          docker run -v "$(pwd):/usr/src/get_chunk" ${{ env.IMAGE_DOCKER_FRAGMENT }}:latest \
           approx_int \
           --read-from /usr/src/approx_int/CHANGELOG.md \
           --start-str '## \[\d\.\d\.\d\]' \
