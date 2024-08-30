@@ -183,6 +183,12 @@ impl<T: SpecialBytes> From<(u8, u8, bool)> for SmallValue<T> {
     }
 }
 
+impl<T: SpecialBytes> From<SmallValue<T>> for (u8, u8, bool) {
+    fn from(value: SmallValue<T>) -> Self {
+        (value.min_bits, value.percent, value.flag)
+    }
+}
+
 impl<T: SpecialBytes> From<T> for SmallValue<T> {
     fn from(number: T) -> Self {
         Self::new(number)
