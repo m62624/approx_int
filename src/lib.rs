@@ -1,3 +1,11 @@
+//! This library provides a utility for approximating large numbers by
+//!  calculating the number of bits needed to store a number
+//! (similar to determining the exponent in mathematics).
+//! The algorithm determines the maximum value that can be represented using
+//! this bit length, and then finds the nearest percentage value that can
+//!  approximately match the original number. This approximation reduces the
+//!  size of the number, while retaining enough information for practical use.
+
 use num_traits::{CheckedShl, PrimInt};
 use std::marker::PhantomData;
 use std::ops::{Add, Div, Mul, Rem, Sub};
@@ -7,6 +15,14 @@ pub trait SpecialBytes: PrimInt + Default + CheckedShl {
 }
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
+/// Represents a small value with configurable minimum bits, percentage, and flag.
+///
+/// # Fields
+///
+/// - `min_bits`: The minimum number of bits required to represent the value.
+/// - `percent`: The percentage value.
+/// - `flag`:  A flag that indicates whether the value is negative.
+///
 pub struct SmallValue<T: SpecialBytes> {
     min_bits: u8,
     percent: u8,
@@ -36,6 +52,7 @@ impl_default_bits! {
 }
 
 impl<T: SpecialBytes> SmallValue<T> {
+    // Calculate the number of bits required to represent a number.
     fn bit_size(number: T) -> u8 {
         (number == T::zero()).then(|| 1).unwrap_or_else(|| {
             T::bits().saturating_sub(if number < T::zero() {
@@ -46,6 +63,7 @@ impl<T: SpecialBytes> SmallValue<T> {
         })
     }
 
+    // Calculate the maximum value that can be represented using a given number of bits.
     fn bit_pow(power: u8) -> T {
         if power >= T::bits() {
             T::max_value()
@@ -57,6 +75,7 @@ impl<T: SpecialBytes> SmallValue<T> {
         }
     }
 
+    // Calculate the approximate value based on a percentage.
     fn calculate_part_from_percentage(percentage: u8, total: T) -> T {
         let total_f32 = match total.to_f32() {
             Some(value) => value,
@@ -71,6 +90,25 @@ impl<T: SpecialBytes> SmallValue<T> {
 }
 
 impl<T: SpecialBytes> SmallValue<T> {
+    /// Create a new instance of SmallValue.
+    ///
+    /// ---
+    /// You can use `Into` to convert a number to a `SmallValue`.
+    /// ### Example
+    /// ```rust
+    /// let value: SmallValue<i32> = 123.into();
+    /// ```
+    ///
+    /// ---
+    /// after creation, the number can be represented in a smaller
+    /// representation `(min_bits: u8, percent:u8, flag: bool)` (use `into`)
+    /// ### Example
+    /// ```rust
+    /// let tuple: (u8, u8, bool) = small_value.into();
+    /// // and the reverse operation
+    /// let tuple = (8, 50, false);
+    /// let small_value: SmallValue<u32> = tuple.into();
+    /// ```
     pub fn new(number: T) -> Self {
         let min_bits = Self::bit_size(number);
 
