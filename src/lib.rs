@@ -54,7 +54,7 @@ impl_default_bits! {
 impl<T: SpecialBytes> SmallValue<T> {
     // Calculate the number of bits required to represent a number.
     fn bit_size(number: T) -> u8 {
-        (number == T::zero()).then(|| 1).unwrap_or_else(|| {
+        (number == T::zero()).then_some(1).unwrap_or_else(|| {
             T::bits().saturating_sub(if number < T::zero() {
                 (!number).leading_zeros()
             } else {
