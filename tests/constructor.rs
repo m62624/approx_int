@@ -71,3 +71,27 @@ fn new_t_11() {
     let small_value = SmallValue::new(i128::MIN);
     assert_eq!(small_value.min_bits(), 127)
 }
+
+#[test]
+fn new_t_12() {
+    let small_value = SmallValue::new(0u32);
+    assert_eq!(small_value.min_bits(), 1)
+}
+
+#[test]
+fn new_t_13() {
+    let small_value = SmallValue::new(0i32);
+    assert_eq!(small_value.min_bits(), 1)
+}
+
+#[test]
+fn new_t_14() {
+    let small_value = SmallValue::new(-3200311i32);
+    assert_eq!(small_value.min_bits(), 22)
+}
+
+#[test]
+fn new_t_15() {
+    let small_value = SmallValue::new(-4324882843248348348i128);
+    assert_eq!(small_value.min_bits(), 62)
+}
