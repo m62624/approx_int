@@ -11,9 +11,10 @@ on:
       - "*"
 
 env:
-  IMAGE_DOCKER: ghcr.io/${{ secrets.NAME_LOGIN }}/aprrox_int
+  IMAGE_DOCKER: ghcr.io/${{ secrets.NAME_LOGIN }}/approx_int
   IMAGE_DOCKER_FRAGMENT: ghcr.io/${{ secrets.NAME_LOGIN }}/get_fragment
   DOCKER_BUILDKIT: 1
+ 
 
 jobs:
   # job для сборки образа (в нем будет происходит сборка и тестирование библиотеки)
@@ -116,11 +117,11 @@ jobs:
         run: |
           ls $(pwd); \
           docker pull ${{ env.IMAGE_DOCKER_FRAGMENT }}:latest; \
-          docker run -v "$(pwd):/usr/src/aprrox_int" ${{ env.IMAGE_DOCKER_FRAGMENT }}:latest \
-          aprrox_int \
-          --read-from /usr/src/aprrox_int/CHANGELOG.md \
+          docker run -v "$(pwd):/usr/src/approx_int" ${{ env.IMAGE_DOCKER_FRAGMENT }}:latest \
+          approx_int \
+          --read-from /usr/src/approx_int/CHANGELOG.md \
           --start-str '## \[\d\.\d\.\d\]' \
-          --write-to /usr/src/aprrox_int/temp_changelog.md;
+          --write-to /usr/src/approx_int/temp_changelog.md;
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
