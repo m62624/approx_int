@@ -1,9 +1,8 @@
 use num_traits::PrimInt;
 use std::marker::PhantomData;
 
-#[derive(Clone, Copy, Hash, PartialEq, Eq)]
-#[cfg_attr(any(feature = "debug", test), derive(Debug))]
-pub struct SmallValue<T: PrimInt + DefaultBits> {
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
+pub struct SmallValue<T: PrimInt + DefaultBits + Default> {
     min_bits: u8,
     percent: u8,
     flag: bool,
@@ -35,7 +34,7 @@ impl_default_bits! {
     i128 => 128
 }
 
-impl<T: PrimInt + DefaultBits> SmallValue<T> {
+impl<T: PrimInt + DefaultBits + Default> SmallValue<T> {
     fn bit_size(number: T) -> u8 {
         (number == T::zero()).then(|| 1).unwrap_or_else(|| {
             T::bits().saturating_sub(if number < T::zero() {
@@ -65,7 +64,9 @@ impl<T: PrimInt + DefaultBits> SmallValue<T> {
             None => T::zero(),
         }
     }
+}
 
+impl<T: PrimInt + DefaultBits + Default> SmallValue<T> {
     pub fn new(number: T) -> Self {
         let min_bits = Self::bit_size(number);
 
@@ -94,7 +95,6 @@ impl<T: PrimInt + DefaultBits> SmallValue<T> {
             percent -= 1;
         }
 
-        // Если процент меньше или равен 1, возвращаем минимальный процент
         Self {
             min_bits,
             percent: 1,
@@ -111,6 +111,63 @@ impl<T: PrimInt + DefaultBits> SmallValue<T> {
             T::zero() - abs_value
         } else {
             abs_value
+        }
+    }
+
+    pub fn min_bits(&self) -> u8 {
+        self.min_bits
+    }
+
+    pub fn percent(&self) -> u8 {
+        self.percent
+    }
+
+    pub fn flag(&self) -> bool {
+        self.flag
+    }
+}
+
+impl<T: PrimInt + DefaultBits + Default> Default for SmallValue<T> {
+    fn default() -> Self {
+        Self::new(T::default())
+    }
+}
+
+impl<T: PrimInt + DefaultBits + Default> std::fmt::Display for SmallValue<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "Exponent: {}, Percentage: {}",
+            self.min_bits, self.percent
+        )
+    }
+}
+
+impl<T: PrimInt + DefaultBits + Default> From<T> for SmallValue<T> {
+    fn from(number: T) -> Self {
+        Self::new(number)
+    }
+}
+
+impl<T: PrimInt + DefaultBits + Default> PartialOrd for SmallValue<T> {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl<T: PrimInt + DefaultBits + Default> Ord for SmallValue<T> {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.approximate().cmp(&other.approximate())
+    }
+}
+
+impl<T: PrimInt + DefaultBits + Default> From<(u8, u8, bool)> for SmallValue<T> {
+    fn from((min_bits, percent, flag): (u8, u8, bool)) -> Self {
+        Self {
+            min_bits,
+            percent,
+            flag,
+            _phantom: PhantomData,
         }
     }
 }
