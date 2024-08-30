@@ -40,3 +40,7 @@ The original value:    8838183818381831838138182391233
 The approximate value: 8822848225945509419002221297664 
 
 ```
+
+---
+# License
+ [MIT License](https://github.com/m62624/approx_int/blob/main/LICENSE)
