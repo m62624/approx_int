@@ -28,9 +28,9 @@ jobs:
         uses: actions/checkout@v4
       # Шаг для сборки и пуша образа (используем кэш прошлой сборки)
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
       - name: Build and push
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v6
         with:
           context: .
           push: true
