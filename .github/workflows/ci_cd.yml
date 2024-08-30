@@ -1,0 +1,131 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - "*"
+    tags:
+      - "*"
+  pull_request:
+    branches:
+      - "*"
+
+env:
+  IMAGE_DOCKER: ghcr.io/${{ secrets.NAME_LOGIN }}/aprrox_int
+  IMAGE_DOCKER_FRAGMENT: ghcr.io/${{ secrets.NAME_LOGIN }}/get_fragment
+  DOCKER_BUILDKIT: 1
+
+jobs:
+  # job для сборки образа (в нем будет происходит сборка и тестирование библиотеки)
+  build-image:
+    runs-on: ubuntu-latest
+    steps:
+      # Шаг для входа в Docker Registry
+      - name: Log in to `GitHub Docker Registry`
+        run: echo ${{ secrets.PAT_GITHUB }} | docker login ghcr.io -u ${{ secrets.NAME_LOGIN }} --password-stdin
+      # Шаг для клонирования репозитория
+      - name: Checkout code
+        uses: actions/checkout@v3
+      # Шаг для сборки и пуша образа (используем кэш прошлой сборки)
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Build and push
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: ${{ env.IMAGE_DOCKER }}:latest
+          cache-from: type=registry,ref=${{ env.IMAGE_DOCKER }}:buildcache
+          cache-to: type=registry,ref=${{ env.IMAGE_DOCKER }}:buildcache,mode=max
+
+  linter-check:
+    needs: build-image
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Run linter
+      run: cargo clippy --all-features -- -D warnings
+
+  tests:
+    needs: [linter-check]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref_type == 'branch' && github.ref != 'refs/heads/main'
+    steps:
+      # Шаг для входа в Docker Registry
+      - name: Log in to `GitHub Docker Registry`
+        run: echo ${{ secrets.PAT_GITHUB }} | docker login ghcr.io -u ${{ secrets.NAME_LOGIN }} --password-stdin
+      # Шаг для клонирования репозитория
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Run coverage tests
+        run: |
+          docker run --security-opt seccomp=unconfined ${{ env.IMAGE_DOCKER }}:latest \
+          cargo test --all-features -- --test-threads=1
+
+  coverage-tests:
+    needs: [linter-check]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
+    steps:
+      # Шаг для входа в Docker Registry
+      - name: Log in to `GitHub Docker Registry`
+        run: echo ${{ secrets.PAT_GITHUB }} | docker login ghcr.io -u ${{ secrets.NAME_LOGIN }} --password-stdin
+      # Шаг для клонирования репозитория
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Run coverage tests
+        run: |
+          docker run --security-opt seccomp=unconfined ${{ env.IMAGE_DOCKER }}:latest \
+          cargo tarpaulin \
+          --all-features \
+          --engine llvm --out xml --output-dir ./coverage/ \
+          -- --test-threads=1
+      # Шаг для копирования отчета о покрытии из контейнера
+      - name: Copy coverage report from container
+        run: |
+          docker cp $(docker ps -lq):/usr/src/approx_int/coverage/cobertura.xml .
+      # Шаг для отправки отчета о покрытии в Codecov
+      - name: Send coverage report to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          fail_ci_if_error: true
+          files: cobertura.xml
+          verbose: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  package-publishing: 
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [coverage-tests]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Publish package
+      run: cargo publish --token ${{ secrets.CRATESIO_TOKEN }}
+
+  create-release-on-github:
+    needs: [package-publishing]
+    runs-on: ubuntu-latest
+    steps:
+      # Шаг для входа в Docker Registry
+      - name: Log in to `GitHub Docker Registry`
+        run: echo ${{ secrets.PAT_GITHUB }} | docker login ghcr.io -u ${{ secrets.NAME_LOGIN }} --password-stdin
+      # Шаг для клонирования репозитория
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Extract changelog content
+        run: |
+          ls $(pwd); \
+          docker pull ${{ env.IMAGE_DOCKER_FRAGMENT }}:latest; \
+          docker run -v "$(pwd):/usr/src/aprrox_int" ${{ env.IMAGE_DOCKER_FRAGMENT }}:latest \
+          aprrox_int \
+          --read-from /usr/src/aprrox_int/CHANGELOG.md \
+          --start-str '## \[\d\.\d\.\d\]' \
+          --write-to /usr/src/aprrox_int/temp_changelog.md;
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          draft: false
+          tag_name: ${{ github.ref }}
+          name: Release ${{github.ref_name}}
+          body_path: temp_changelog.md
+          token: ${{ secrets.PAT_GITHUB }}
