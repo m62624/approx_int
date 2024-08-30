@@ -15,14 +15,8 @@ pub trait SpecialBytes: PrimInt + Default + CheckedShl {
 }
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
-/// Represents a small value with configurable minimum bits, percentage, and flag.
-///
-/// # Fields
-///
-/// - `min_bits`: The minimum number of bits required to represent the value.
-/// - `percent`: The percentage value.
-/// - `flag`:  A flag that indicates whether the value is negative.
-///
+/// The structure stores the resulting number
+/// in a compressed format from which an approximated number can be obtained
 pub struct SmallValue<T: SpecialBytes> {
     min_bits: u8,
     percent: u8,
