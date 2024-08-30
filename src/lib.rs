@@ -154,7 +154,7 @@ impl<T: SpecialBytes> SmallValue<T> {
     }
 
     /// Returns the approximate value of the number.
-    /// The value is calculated based on the percentage and the minimum number of bits.
+    /// The approximate number will always be lower than the original one, with the exception of only the number 0
     ///
     /// ### Example
     /// ```rust

@@ -19,7 +19,7 @@ The compact representation of numbers using a tuple `(u8, u8, bool)`:
 - `u8` for the percentage that describes the degree of approximation.
 - `bool` for storing the sign of the number (true if negative).
 
-**In total, this representation uses 24 bits**. The approximate number will always be lower than the original one, with the exception of only the number 0 .While there is some loss of precision, this approach is useful in scenarios where exact values are not critical.
+**In total, this representation uses 24 bits**. The approximate number will always be lower than the original one, with the exception of only the number 0. While there is some loss of precision, this approach is useful in scenarios where exact values are not critical.
 
 ```rust
     let big_value: u128 = 8838183818381831838138182391233;
