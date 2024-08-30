@@ -1,23 +1,23 @@
-use num_traits::PrimInt;
+use num_traits::{CheckedShl, PrimInt};
 use std::marker::PhantomData;
 use std::ops::{Add, Div, Mul, Rem, Sub};
 
+pub trait SpecialBytes: PrimInt + Default + CheckedShl {
+    fn bits() -> u8;
+}
+
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
-pub struct SmallValue<T: PrimInt + DefaultBits + Default> {
+pub struct SmallValue<T: SpecialBytes> {
     min_bits: u8,
     percent: u8,
     flag: bool,
     _phantom: PhantomData<T>,
 }
 
-pub trait DefaultBits {
-    fn bits() -> u8;
-}
-
 macro_rules! impl_default_bits {
     ($($t:ty => $b:expr),*) => {
         $(
-            impl DefaultBits for $t {
+            impl SpecialBytes for $t {
                 fn bits() -> u8 {
                     $b
                 }
@@ -35,7 +35,7 @@ impl_default_bits! {
     i128 => 128
 }
 
-impl<T: PrimInt + DefaultBits + Default> SmallValue<T> {
+impl<T: SpecialBytes> SmallValue<T> {
     fn bit_size(number: T) -> u8 {
         (number == T::zero()).then(|| 1).unwrap_or_else(|| {
             T::bits().saturating_sub(if number < T::zero() {
@@ -50,28 +50,39 @@ impl<T: PrimInt + DefaultBits + Default> SmallValue<T> {
         if power >= T::bits() {
             T::max_value()
         } else {
-            (T::one() << power.into()) - T::one()
+            match T::one().checked_shl(power.into()) {
+                Some(shifted) => shifted.checked_sub(&T::one()).unwrap_or(T::max_value()),
+                None => T::max_value(),
+            }
         }
     }
 
     fn calculate_part_from_percentage(percentage: u8, total: T) -> T {
-        let total_f64 = match total.to_f64() {
+        let total_f32 = match total.to_f32() {
             Some(value) => value,
             None => return T::zero(),
         };
 
-        match T::from(total_f64 * (percentage as f64 / 100.0)) {
+        match T::from(total_f32 * (percentage as f32 / 100.0)) {
             Some(value) => value,
             None => T::zero(),
         }
     }
 }
 
-impl<T: PrimInt + DefaultBits + Default> SmallValue<T> {
+impl<T: SpecialBytes> SmallValue<T> {
     pub fn new(number: T) -> Self {
         let min_bits = Self::bit_size(number);
 
         let (abs_number, flag) = if number < T::zero() {
+            if T::min_value() == number {
+                return Self {
+                    min_bits,
+                    percent: 99,
+                    flag: true,
+                    _phantom: PhantomData,
+                };
+            }
             (T::zero() - number, true)
         } else {
             (number, false)
@@ -128,7 +139,7 @@ impl<T: PrimInt + DefaultBits + Default> SmallValue<T> {
     }
 }
 
-impl<T: PrimInt + DefaultBits + Default> std::fmt::Display for SmallValue<T> {
+impl<T: SpecialBytes> std::fmt::Display for SmallValue<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
@@ -138,25 +149,25 @@ impl<T: PrimInt + DefaultBits + Default> std::fmt::Display for SmallValue<T> {
     }
 }
 
-impl<T: PrimInt + DefaultBits + Default> Default for SmallValue<T> {
+impl<T: SpecialBytes> Default for SmallValue<T> {
     fn default() -> Self {
         Self::new(T::default())
     }
 }
 
-impl<T: PrimInt + DefaultBits + Default> PartialOrd for SmallValue<T> {
+impl<T: SpecialBytes> PartialOrd for SmallValue<T> {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.cmp(other))
     }
 }
 
-impl<T: PrimInt + DefaultBits + Default> Ord for SmallValue<T> {
+impl<T: SpecialBytes> Ord for SmallValue<T> {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         self.approximate().cmp(&other.approximate())
     }
 }
 
-impl<T: PrimInt + DefaultBits + Default> From<(u8, u8, bool)> for SmallValue<T> {
+impl<T: SpecialBytes> From<(u8, u8, bool)> for SmallValue<T> {
     fn from((min_bits, percent, flag): (u8, u8, bool)) -> Self {
         Self {
             min_bits,
@@ -167,13 +178,13 @@ impl<T: PrimInt + DefaultBits + Default> From<(u8, u8, bool)> for SmallValue<T> 
     }
 }
 
-impl<T: PrimInt + DefaultBits + Default> From<T> for SmallValue<T> {
+impl<T: SpecialBytes> From<T> for SmallValue<T> {
     fn from(number: T) -> Self {
         Self::new(number)
     }
 }
 
-impl<T: PrimInt + DefaultBits + Default> Add for SmallValue<T> {
+impl<T: SpecialBytes> Add for SmallValue<T> {
     type Output = SmallValue<T>;
 
     fn add(self, rhs: Self) -> Self::Output {
@@ -182,7 +193,7 @@ impl<T: PrimInt + DefaultBits + Default> Add for SmallValue<T> {
     }
 }
 
-impl<T: PrimInt + DefaultBits + Default> Sub for SmallValue<T> {
+impl<T: SpecialBytes> Sub for SmallValue<T> {
     type Output = SmallValue<T>;
 
     fn sub(self, rhs: Self) -> Self::Output {
@@ -191,7 +202,7 @@ impl<T: PrimInt + DefaultBits + Default> Sub for SmallValue<T> {
     }
 }
 
-impl<T: PrimInt + DefaultBits + Default> Mul for SmallValue<T> {
+impl<T: SpecialBytes> Mul for SmallValue<T> {
     type Output = SmallValue<T>;
 
     fn mul(self, rhs: Self) -> Self::Output {
@@ -200,7 +211,7 @@ impl<T: PrimInt + DefaultBits + Default> Mul for SmallValue<T> {
     }
 }
 
-impl<T: PrimInt + DefaultBits + Default> Div for SmallValue<T> {
+impl<T: SpecialBytes> Div for SmallValue<T> {
     type Output = SmallValue<T>;
 
     fn div(self, rhs: Self) -> Self::Output {
@@ -209,7 +220,7 @@ impl<T: PrimInt + DefaultBits + Default> Div for SmallValue<T> {
     }
 }
 
-impl<T: PrimInt + DefaultBits + Default> Rem for SmallValue<T> {
+impl<T: SpecialBytes> Rem for SmallValue<T> {
     type Output = SmallValue<T>;
 
     fn rem(self, rhs: Self) -> Self::Output {
