@@ -126,19 +126,23 @@ impl<T: SpecialBytes> SmallValue<T> {
         }
     }
 
+    #[cfg(not(tarpaulin_include))]
     pub fn min_bits(&self) -> u8 {
         self.min_bits
     }
 
+    #[cfg(not(tarpaulin_include))]
     pub fn percent(&self) -> u8 {
         self.percent
     }
 
+    #[cfg(not(tarpaulin_include))]
     pub fn flag(&self) -> bool {
         self.flag
     }
 }
 
+#[cfg(not(tarpaulin_include))]
 impl<T: SpecialBytes> std::fmt::Display for SmallValue<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
@@ -149,6 +153,7 @@ impl<T: SpecialBytes> std::fmt::Display for SmallValue<T> {
     }
 }
 
+#[cfg(not(tarpaulin_include))]
 impl<T: SpecialBytes> Default for SmallValue<T> {
     fn default() -> Self {
         Self::new(T::default())
