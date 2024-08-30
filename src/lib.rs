@@ -1,5 +1,6 @@
 use num_traits::PrimInt;
 use std::marker::PhantomData;
+use std::ops::{Add, Div, Mul, Rem, Sub};
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 pub struct SmallValue<T: PrimInt + DefaultBits + Default> {
@@ -127,12 +128,6 @@ impl<T: PrimInt + DefaultBits + Default> SmallValue<T> {
     }
 }
 
-impl<T: PrimInt + DefaultBits + Default> Default for SmallValue<T> {
-    fn default() -> Self {
-        Self::new(T::default())
-    }
-}
-
 impl<T: PrimInt + DefaultBits + Default> std::fmt::Display for SmallValue<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
@@ -143,9 +138,9 @@ impl<T: PrimInt + DefaultBits + Default> std::fmt::Display for SmallValue<T> {
     }
 }
 
-impl<T: PrimInt + DefaultBits + Default> From<T> for SmallValue<T> {
-    fn from(number: T) -> Self {
-        Self::new(number)
+impl<T: PrimInt + DefaultBits + Default> Default for SmallValue<T> {
+    fn default() -> Self {
+        Self::new(T::default())
     }
 }
 
@@ -169,5 +164,56 @@ impl<T: PrimInt + DefaultBits + Default> From<(u8, u8, bool)> for SmallValue<T> 
             flag,
             _phantom: PhantomData,
         }
+    }
+}
+
+impl<T: PrimInt + DefaultBits + Default> From<T> for SmallValue<T> {
+    fn from(number: T) -> Self {
+        Self::new(number)
+    }
+}
+
+impl<T: PrimInt + DefaultBits + Default> Add for SmallValue<T> {
+    type Output = SmallValue<T>;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        let result = self.approximate() + rhs.approximate();
+        SmallValue::new(result)
+    }
+}
+
+impl<T: PrimInt + DefaultBits + Default> Sub for SmallValue<T> {
+    type Output = SmallValue<T>;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        let result = self.approximate() - rhs.approximate();
+        SmallValue::new(result)
+    }
+}
+
+impl<T: PrimInt + DefaultBits + Default> Mul for SmallValue<T> {
+    type Output = SmallValue<T>;
+
+    fn mul(self, rhs: Self) -> Self::Output {
+        let result = self.approximate() * rhs.approximate();
+        SmallValue::new(result)
+    }
+}
+
+impl<T: PrimInt + DefaultBits + Default> Div for SmallValue<T> {
+    type Output = SmallValue<T>;
+
+    fn div(self, rhs: Self) -> Self::Output {
+        let result = self.approximate() / rhs.approximate();
+        SmallValue::new(result)
+    }
+}
+
+impl<T: PrimInt + DefaultBits + Default> Rem for SmallValue<T> {
+    type Output = SmallValue<T>;
+
+    fn rem(self, rhs: Self) -> Self::Output {
+        let result = self.approximate() % rhs.approximate();
+        SmallValue::new(result)
     }
 }
