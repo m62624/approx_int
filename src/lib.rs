@@ -183,7 +183,7 @@ impl<T: SpecialBytes> SmallValue<T> {
         self.percent
     }
 
-    // Returns the flag that indicates whether the number is negative.
+    /// Returns the flag that indicates whether the number is negative.
     #[cfg(not(tarpaulin_include))]
     pub fn flag(&self) -> bool {
         self.flag
