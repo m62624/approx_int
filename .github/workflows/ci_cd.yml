@@ -25,7 +25,7 @@ jobs:
         run: echo ${{ secrets.PAT_GITHUB }} | docker login ghcr.io -u ${{ secrets.NAME_LOGIN }} --password-stdin
       # Шаг для клонирования репозитория
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       # Шаг для сборки и пуша образа (используем кэш прошлой сборки)
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
@@ -42,7 +42,7 @@ jobs:
     needs: build-image
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Run linter
       run: cargo clippy --all-features -- -D warnings
 
@@ -56,7 +56,7 @@ jobs:
         run: echo ${{ secrets.PAT_GITHUB }} | docker login ghcr.io -u ${{ secrets.NAME_LOGIN }} --password-stdin
       # Шаг для клонирования репозитория
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Run coverage tests
         run: |
           docker run --security-opt seccomp=unconfined ${{ env.IMAGE_DOCKER }}:latest \
@@ -72,7 +72,7 @@ jobs:
         run: echo ${{ secrets.PAT_GITHUB }} | docker login ghcr.io -u ${{ secrets.NAME_LOGIN }} --password-stdin
       # Шаг для клонирования репозитория
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Run coverage tests
         run: |
           docker run --security-opt seccomp=unconfined ${{ env.IMAGE_DOCKER }}:latest \
@@ -98,7 +98,7 @@ jobs:
     needs: [coverage-tests]
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Publish package
       run: cargo publish --token ${{ secrets.CRATESIO_TOKEN }}
 
@@ -111,7 +111,7 @@ jobs:
         run: echo ${{ secrets.PAT_GITHUB }} | docker login ghcr.io -u ${{ secrets.NAME_LOGIN }} --password-stdin
       # Шаг для клонирования репозитория
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Extract changelog content
         run: |
           ls $(pwd); \
