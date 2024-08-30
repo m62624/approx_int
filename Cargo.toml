@@ -2,6 +2,12 @@
 name = "approx_int"
 version = "1.0.0"
 edition = "2021"
+description = "A compact representation of numbers using a tuple (u8, u8, bool) for efficient approximation and storage."
+repository = "https://github.com/m62624/approx_int"
+categories = ["compression"]
+keywords = ["approximation", "compression", "compact", "integer", "number"]
+license = "MIT"
+exclude = [".github", ".gitignore", ".dockerignore", "Dockerfile", "README.md"]
 
 [dependencies]
 num-traits = "0.2.19"
