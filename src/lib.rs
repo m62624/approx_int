@@ -43,19 +43,24 @@ impl DefaultBits for i128 {
 
 #[derive(Clone, Copy, Hash, PartialEq, Eq)]
 #[cfg_attr(any(feature = "debug", test), derive(Debug))]
-pub struct SmallValue<T: PrimInt + DefaultBits> {
+pub struct SmallValue<T: PrimInt + DefaultBits + std::fmt::Debug> {
     min_bits: u8,
     percent: u8,
     flag: bool,
     _phantom: PhantomData<T>,
 }
 
-impl<T: PrimInt + DefaultBits> SmallValue<T> {
+impl<T: PrimInt + std::fmt::Debug + DefaultBits> SmallValue<T> {
     fn bit_size(number: T) -> u8 {
         if number == T::zero() {
             return 1;
         } else {
-            T::bits() - number.leading_zeros() as u8
+            T::bits()
+                - if number < T::zero() {
+                    (!number).leading_zeros()
+                } else {
+                    number.leading_zeros()
+                } as u8
         }
     }
 
@@ -91,37 +96,61 @@ impl<T: PrimInt + DefaultBits> SmallValue<T> {
         let mut percent = 99;
         let min_bits = Self::bit_size(number);
 
+        let mut flag = false;
+        let number = if number < T::zero() {
+            flag = true;
+            T::zero() - number
+        } else {
+            number
+        };
+
         loop {
-            if number
-                .checked_sub(&Self::calculate_part_from_percentage(
-                    percent,
-                    Self::bit_pow(min_bits),
-                ))
-                .is_some()
-            {
+            if number > Self::calculate_part_from_percentage(percent, Self::bit_pow(min_bits)) {
                 return Self {
                     min_bits,
-                    percent,
-                    flag: number < T::zero(),
+                    percent: if flag {
+                        percent.saturating_add(1)
+                    } else {
+                        percent
+                    },
+                    flag,
                     _phantom: PhantomData,
                 };
             }
-            percent -= 1;
+            if percent - 1 < 1 {
+                return Self {
+                    min_bits,
+                    percent: 1,
+                    flag,
+                    _phantom: PhantomData,
+                };
+            } else {
+                percent -= 1;
+            }
         }
     }
 
     pub fn approximate_value(&self) -> T {
-        Self::calculate_part_from_percentage(self.percent, Self::bit_pow(self.min_bits))
+        let abs_value =
+            Self::calculate_part_from_percentage(self.percent, Self::bit_pow(self.min_bits));
+
+        // Добавляем знак, если `flag` установлен в true
+        if self.flag {
+            T::zero() - abs_value
+        } else {
+            abs_value
+        }
     }
 }
 
 #[test]
 fn check() {
-    let original_number = 32013013023031032u128;
+    let original_number = 2i128;
     // let original_number = 382831829391923912392818382312u128;
     println!("x: {}", original_number);
     let small_value = SmallValue::new(original_number);
     println!("{:#?}", small_value);
 
     println!("y: {}", small_value.approximate_value());
+    println!("{}", original_number > small_value.approximate_value());
 }
