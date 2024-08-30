@@ -1,4 +1,8 @@
 # approx_int
+[![Crates.io](https://img.shields.io/crates/v/approx_int?style=for-the-badge
+)](https://crates.io/crates/approx_int)
+[![Docs.rs](https://img.shields.io/docsrs/approx_int?style=for-the-badge
+)](https://docs.rs/approx_int/1.0.0/approx_int/)
 [![Static Badge](https://img.shields.io/badge/changelog---?style=for-the-badge&labelColor=blue&color=blue)](https://github.com/m62624/approx_int/blob/main/CHANGELOG.md)
 [![Codecov](https://img.shields.io/codecov/c/github/m62624/approx_int?style=for-the-badge
 )](https://app.codecov.io/gh/m62624/approx_int)
