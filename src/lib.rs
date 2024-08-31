@@ -260,8 +260,7 @@ impl<T: SpecialBytes> Add for SmallValue<T> {
     type Output = SmallValue<T>;
 
     fn add(self, rhs: Self) -> Self::Output {
-        let result = self.approximate() + rhs.approximate();
-        SmallValue::new(result)
+        SmallValue::new(self.approximate() + rhs.approximate())
     }
 }
 
@@ -269,8 +268,7 @@ impl<T: SpecialBytes> Sub for SmallValue<T> {
     type Output = SmallValue<T>;
 
     fn sub(self, rhs: Self) -> Self::Output {
-        let result = self.approximate() - rhs.approximate();
-        SmallValue::new(result)
+        SmallValue::new(self.approximate() - rhs.approximate())
     }
 }
 
@@ -278,8 +276,7 @@ impl<T: SpecialBytes> Mul for SmallValue<T> {
     type Output = SmallValue<T>;
 
     fn mul(self, rhs: Self) -> Self::Output {
-        let result = self.approximate() * rhs.approximate();
-        SmallValue::new(result)
+        SmallValue::new(self.approximate() * rhs.approximate())
     }
 }
 
@@ -287,8 +284,7 @@ impl<T: SpecialBytes> Div for SmallValue<T> {
     type Output = SmallValue<T>;
 
     fn div(self, rhs: Self) -> Self::Output {
-        let result = self.approximate() / rhs.approximate();
-        SmallValue::new(result)
+        SmallValue::new(self.approximate() / rhs.approximate())
     }
 }
 
@@ -296,7 +292,6 @@ impl<T: SpecialBytes> Rem for SmallValue<T> {
     type Output = SmallValue<T>;
 
     fn rem(self, rhs: Self) -> Self::Output {
-        let result = self.approximate() % rhs.approximate();
-        SmallValue::new(result)
+        SmallValue::new(self.approximate() % rhs.approximate())
     }
 }
