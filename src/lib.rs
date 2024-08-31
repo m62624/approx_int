@@ -1,18 +1,26 @@
 //! This library provides a utility for approximating large numbers by
-//!  calculating the number of bits needed to store a number
-//! (similar to determining the exponent in mathematics).
+//!  calculating the number of bits needed to store a number.
 //! The algorithm determines the maximum value that can be represented using
 //! this bit length, and then finds the nearest percentage value that can
 //!  approximately match the original number. This approximation reduces the
 //!  size of the number, while retaining enough information for practical use.
+//!
+//! The compact representation of numbers using a tuple `(u8, u8, bool)`:
+
+//! - `u8` for the number of bits required to store the value.
+//! - `u8` for the percentage that describes the degree of approximation.
+//! - `bool` for storing the sign of the number (true if negative).
+//!
+//! **In total, this representation uses 24 bits**. The approximate number will typically be smaller than the original,
+//! although this may not always be the case (for instance, a value of –88 may return a value of –88).
+//! In most instances (*depending on the input bit length, as larger input data such as 128 bits reduced to 24 bits
+//! inevitably leads to some duplication*), the approximate value will be less, but the reverse may occur,
+//! especially with negative values in the range –1 to –65. Despite some loss in precision, this method is useful in situations
+//! where exact values are not essential.
 
 use num_traits::{CheckedShl, PrimInt};
 use std::marker::PhantomData;
 use std::ops::{Add, Div, Mul, Rem, Sub};
-
-pub trait SpecialBytes: PrimInt + Default + CheckedShl {
-    fn bits() -> u8;
-}
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 /// The structure stores the resulting number
@@ -22,6 +30,12 @@ pub struct SmallValue<T: SpecialBytes> {
     percent: u8,
     flag: bool,
     _phantom: PhantomData<T>,
+}
+
+/// The trait is used to determine the number of bits required to store a number
+pub trait SpecialBytes: PrimInt + Default + CheckedShl {
+    /// Returns the number of bits required to store a number
+    fn bits() -> u8;
 }
 
 macro_rules! impl_default_bits {
@@ -105,12 +119,13 @@ impl<T: SpecialBytes> SmallValue<T> {
     /// ```
     pub fn new(number: T) -> Self {
         let min_bits = Self::bit_size(number);
+        let mut percent = 99;
 
         let (abs_number, flag) = if number < T::zero() {
             if T::min_value() == number {
                 return Self {
                     min_bits,
-                    percent: 99,
+                    percent,
                     flag: true,
                     _phantom: PhantomData,
                 };
@@ -120,15 +135,13 @@ impl<T: SpecialBytes> SmallValue<T> {
             (number, false)
         };
 
-        let mut percent = 99;
-
         while percent > 1 {
             let approx = Self::calculate_part_from_percentage(percent, Self::bit_pow(min_bits));
             if abs_number > approx {
                 return Self {
                     min_bits,
-                    percent: if flag {
-                        percent.saturating_add(1)
+                    percent: if flag && percent != 99 {
+                        percent + 1
                     } else {
                         percent
                     },
