@@ -85,15 +85,11 @@ impl<T: SpecialBytes> SmallValue<T> {
 
     // Calculate the approximate value based on a percentage.
     fn calculate_part_from_percentage(percentage: u8, total: T) -> T {
-        let total_f32 = match total.to_f32() {
-            Some(value) => value,
-            None => return T::zero(),
-        };
-
-        match T::from(total_f32 * (percentage as f32 / 100.0)) {
-            Some(value) => value,
-            None => T::zero(),
-        }
+        let hundred = T::from(100u8).unwrap_or_default();
+        total
+            .checked_div(&hundred)
+            .and_then(|part| part.checked_mul(&T::from(percentage).unwrap_or_default()))
+            .unwrap_or_else(T::zero)
     }
 }
 
