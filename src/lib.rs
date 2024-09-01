@@ -11,12 +11,11 @@
 //! - `u8` for the percentage that describes the degree of approximation.
 //! - `bool` for storing the sign of the number (true if negative).
 //!
-//! **In total, this representation uses 24 bits**. The approximate number will typically be smaller than the original,
-//! although this may not always be the case (for instance, a value of –88 may return a value of –88).
-//! In most instances (*depending on the input bit length, as larger input data such as 128 bits reduced to 24 bits
-//! inevitably leads to some duplication*), the approximate value will be less, but the reverse may occur,
-//! especially with negative values in the range –1 to –65. Despite some loss in precision, this method is useful in situations
-//! where exact values are not essential.
+//! **In total, this representation uses 24 bits**. The approximate number will generally be
+//! smaller than the original, although there are exceptions, especially when working with negative values.
+//! For positive numbers, the approximation usually results in a slightly smaller value,
+//! but with negative numbers, the approximation could be either smaller or
+//! larger than the original (for example, a value of –88 might approximate to –88 or a slightly different value).
 
 use num_traits::{CheckedShl, PrimInt};
 use std::marker::PhantomData;
@@ -106,8 +105,8 @@ impl<T: SpecialBytes> SmallValue<T> {
         let diff = original
             .checked_sub(&approximate)
             .and_then(|sub| sub.to_f64())
-            .and_then(|diff| original.to_f64().and_then(|original| Some(diff / original)))
-            .and_then(|div| Some(div * 100.0))
+            .and_then(|diff| original.to_f64().map(|original| diff / original))
+            .map(|div| div * 100.0)
             .unwrap_or_default();
 
         if let Some(percent) = T::from(diff) {
