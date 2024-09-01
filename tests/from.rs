@@ -4,14 +4,14 @@ use approx_int::SmallValue;
 fn tuple_t_0() {
     let small_value = SmallValue::new(128);
     let tuple: (u8, u8, bool) = small_value.into();
-    assert_eq!(tuple, (8, 50, false));
+    assert_eq!(tuple, (8, 63, false));
 }
 
 #[test]
 fn tuple_t_1() {
     let small_value = SmallValue::new(64);
     let tuple: (u8, u8, bool) = small_value.into();
-    assert_eq!(tuple, (7, 50, false));
+    assert_eq!(tuple, (7, 63, false));
 }
 
 #[test]

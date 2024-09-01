@@ -31,3 +31,19 @@ fn special_value_t_2() {
     let error_rate = calculate_error_rate(original, approx).unwrap();
     assert!(error_rate < 0.9);
 }
+
+#[test]
+fn special_value_t_3() {
+    let original = -324324923040329432943249324903294i128;
+    let approx = SmallValue::new(original).approximate();
+    let error_rate = calculate_error_rate(original, approx).unwrap();
+    assert!(error_rate < 1.0);
+}
+
+#[test]
+fn special_value_t_4() {
+    let original = -14403;
+    let approx = SmallValue::new(original).approximate();
+    let error_rate = calculate_error_rate(original, approx).unwrap();
+    assert!(error_rate < 1.0);
+}

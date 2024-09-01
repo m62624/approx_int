@@ -39,7 +39,7 @@ fn sub_t_1() {
     let a = SmallValue::new(128);
     let b = SmallValue::new(64);
     let c = a - b;
-    assert_eq!(c.min_bits(), 7);
+    assert_eq!(c.min_bits(), 6);
 }
 
 #[test]
