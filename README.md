@@ -51,6 +51,25 @@ The approximate value: 8822848225945509419002221297664
 
 ```
 
+### Approximation Method
+This method relies on several key concepts:
+
+- Determining the minimum Number of bits required to store a number. You calculate the minimum number of bits necessary to represent a number, which is then used to determine the maximum value that can be represented with that number of bits (`2^(n-1)`).
+
+- Selecting the optimal percentage for approximation. A percentage is used to determine how closely the approximated value should match the original number. This percentage is chosen to minimize the difference between the original and the approximation.
+
+Approximation Formula
+The formula for calculating the approximated value is as follows:
+
+```
+approximate_value = (bit_pow(min_bits) * percent) / 100
+```
+
+Where:
+
+- `bit_pow(min_bits)` — is the maximum value that can be represented by the given number of bits (min_bits).
+- `percent` — is the percentage value chosen to minimize the approximation error.
+
 ---
 # License
  [MIT License](https://github.com/m62624/approx_int/blob/main/LICENSE)
