@@ -33,7 +33,7 @@ pub struct SmallValue<T: SpecialBytes> {
 }
 
 /// The trait is used to determine the number of bits required to store a number
-pub trait SpecialBytes: PrimInt + Default + CheckedShl {
+pub trait SpecialBytes: PrimInt + Default + CheckedShl + std::fmt::Display {
     /// Returns the number of bits required to store a number
     fn bits() -> u8;
 }
@@ -86,10 +86,35 @@ impl<T: SpecialBytes> SmallValue<T> {
     // Calculate the approximate value based on a percentage.
     fn calculate_part_from_percentage(percentage: u8, total: T) -> T {
         let hundred = T::from(100u8).unwrap_or_default();
+        let percentage = T::from(percentage).unwrap_or_default();
+
+        if hundred > total {
+            if let Some(product) = total.checked_mul(&percentage) {
+                if let Some(result) = product.checked_div(&hundred) {
+                    return result;
+                }
+            }
+        }
+
         total
             .checked_div(&hundred)
-            .and_then(|part| part.checked_mul(&T::from(percentage).unwrap_or_default()))
+            .and_then(|part| part.checked_mul(&percentage))
             .unwrap_or_else(T::zero)
+    }
+
+    fn calculate_error_rate(original: T, approximate: T) -> T {
+        let diff = original
+            .checked_sub(&approximate)
+            .and_then(|sub| sub.to_f64())
+            .and_then(|diff| original.to_f64().and_then(|original| Some(diff / original)))
+            .and_then(|div| Some(div * 100.0))
+            .unwrap_or_default();
+
+        if let Some(percent) = T::from(diff) {
+            percent
+        } else {
+            T::zero()
+        }
     }
 }
 
@@ -136,8 +161,14 @@ impl<T: SpecialBytes> SmallValue<T> {
             if abs_number > approx {
                 return Self {
                     min_bits,
-                    percent: if flag && percent != 99 {
-                        percent + 1
+                    percent: if flag {
+                        percent
+                            + Self::calculate_error_rate(
+                                abs_number,
+                                SmallValue::from((min_bits, percent, false)).approximate(),
+                            )
+                            .to_u8()
+                            .unwrap_or_default()
                     } else {
                         percent
                     },
