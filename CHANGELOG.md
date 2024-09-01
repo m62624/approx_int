@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.1.1] - 2024.09.01
+
+### Fixed
+
+- Percentage error calculation now handles large negative numbers accurately
+
 ## [1.0.1] - 2024.08.31
 
 ### Added
