@@ -41,4 +41,3 @@ fn eq_t_5() {
     let b = SmallValue::new(128);
     assert!(a >= b);
 }
-

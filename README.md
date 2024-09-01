@@ -23,12 +23,11 @@ The compact representation of numbers using a tuple `(u8, u8, bool)`:
 - `u8` for the percentage that describes the degree of approximation.
 - `bool` for storing the sign of the number (true if negative).
 
-**In total, this representation uses 24 bits**. The approximate number will typically be smaller than the original, 
-although this may not always be the case (for instance, a value of –88 may return a value of –88). 
-In most instances (depending on the input bit length, as larger input data such as 128 bits reduced to 24 bits 
-inevitably leads to some duplication), the approximate value will be less, but the reverse may occur, 
-especially with negative values in the range –1 to –65. Despite some loss in precision, this method is useful in situations 
-where exact values are not essential.
+ **In total, this representation uses 24 bits**. The approximate number will generally be 
+ smaller than the original, although there are exceptions, especially when working with negative values. 
+ For positive numbers, the approximation usually results in a slightly smaller value, 
+ but with negative numbers, the approximation could be either smaller or 
+ larger than the original (for example, a value of –88 might approximate to –88 or a slightly different value).
 
 ```rust
     let big_value: u128 = 8838183818381831838138182391233;
