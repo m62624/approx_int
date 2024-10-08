@@ -214,8 +214,9 @@ impl<T: SpecialBytes> SmallValue<T> {
     /// The maximum value (`max`) is calculated by creating a new object with an increased percentage value and calling the `approximate` method.
     ///
     /// It is guaranteed that the original number is not less than `min`, but also not greater than `max`.
-    /// However, there may be exceptions for negative numbers, and `min` or `max` can equal the maximum value of the chosen type.
-    /// For example, if the type `T` is `u32`, and the number is close to `u32::MAX`, then the boundary will be at `u32::MAX`.
+    /// However, there may be exceptions for negative numbers. Additionally, if the number is close to the maximum value of the chosen type (`T::MAX`),
+    /// the `max` value might be lower than the original number.
+    /// For example, if the type `T` is `u32`, and the number is close to `u32::MAX`, then the `max` boundary will likely be lower than the original number.
     ///
     pub fn bounds(&self) -> (T, T) {
         let min = self.approximate();
