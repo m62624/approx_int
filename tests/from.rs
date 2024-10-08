@@ -27,3 +27,9 @@ fn tuple_t_3() {
     let small_value: SmallValue<u128> = value.into();
     assert_eq!(small_value.min_bits(), 128);
 }
+
+#[test]
+fn tuple_t_5() {
+    let small_value: SmallValue<u128> = (128, 99).into();
+    assert_eq!(small_value.min_bits(), 128);
+}
