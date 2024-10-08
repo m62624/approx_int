@@ -127,7 +127,7 @@ impl<T: SpecialBytes> SmallValue<T> {
     ///
     /// ---
     /// after creation, the number can be represented in a smaller
-    /// representation `(min_bits: u8, percent:u8, flag: bool)` (use `into`)
+    /// representation `(min_bits: u8, percent:u8, flag: bool)` (use `into`).
     /// ### Example
     /// ```rust
     /// let tuple: (u8, u8, bool) = small_value.into();
@@ -185,7 +185,8 @@ impl<T: SpecialBytes> SmallValue<T> {
     }
 
     /// Returns the approximate value of the number.
-    /// The approximate number will always be lower than the original one, with the exception of only the number 0
+    /// The approximate number will usually be less than the original one,
+    /// although there are exceptions, especially when working with negative values or with small numbers (less than 100).
     ///
     /// ### Example
     /// ```rust
@@ -219,10 +220,10 @@ impl<T: SpecialBytes> SmallValue<T> {
     /// The minimum value (`min`) is calculated using the `approximate` method.
     /// The maximum value (`max`) is calculated by creating a new object with an increased percentage value and calling the `approximate` method.
     ///
-    /// It is guaranteed that the original number is not less than `min`, but also not greater than `max`.
+    /// It is generally guaranteed that the original number is not less than `min`, but also not greater than `max`.
     /// However, there may be exceptions for negative numbers. Additionally, if the number is close to the maximum value of the chosen type (`T::MAX`),
     /// the `max` value might be lower than the original number.
-    /// For example, if the type `T` is `u32`, and the number is close to `u32::MAX`, then the `max` boundary will likely be lower than the original number.
+    /// For example, if the type `T` is `u32`, and the number is close to `u32::MAX`, then the `max` boundary will likely be lower than the original number (the same thing can happen if `min` is close to `u32::MIN`).
     ///
     pub fn bounds(&self) -> (T, T) {
         let min = self.approximate();
