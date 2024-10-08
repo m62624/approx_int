@@ -227,22 +227,20 @@ impl<T: SpecialBytes> SmallValue<T> {
     ///
     pub fn bounds(&self) -> (T, T) {
         let min = self.approximate();
-        let max = Self::from((
-            self.min_bits,
-            if self.flag {
-                self.percent.saturating_sub(2)
-            } else {
-                self.percent.saturating_add(1)
-            },
-            self.flag,
-        ))
-        .approximate();
 
-        // if self.flag {
-        // (max, min)
-        // } else {
-        (min, max)
-        // }
+        (
+            min,
+            Self::from((
+                self.min_bits,
+                if self.flag {
+                    self.percent.saturating_sub(2)
+                } else {
+                    self.percent.saturating_add(1)
+                },
+                self.flag,
+            ))
+            .approximate(),
+        )
     }
 
     /// Returns the minimum number of bits required to represent the number.
