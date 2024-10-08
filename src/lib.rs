@@ -1,21 +1,19 @@
-//! This library provides a utility for approximating large numbers by
-//!  calculating the number of bits needed to store a number.
-//! The algorithm determines the maximum value that can be represented using
-//! this bit length, and then finds the nearest percentage value that can
-//!  approximately match the original number. This approximation reduces the
-//!  size of the number, while retaining enough information for practical use.
+//! This library approximates large numbers by calculating the number of bits needed to store a number.
+//! The algorithm determines the maximum value that can be represented using this bit length,
+//! and then finds the nearest percentage value that can approximately match the original number.
+//! This approximation reduces the size of the number while retaining enough information for practical use.
 //!
-//! The compact representation of numbers using a tuple `(u8, u8, bool)`:
-
+//! The compact representation of numbers uses a tuple `(u8, u8, bool)`:
+//!
 //! - `u8` for the number of bits required to store the value.
 //! - `u8` for the percentage that describes the degree of approximation.
 //! - `bool` for storing the sign of the number (true if negative).
 //!
-//! **In total, this representation uses 24 bits**. The approximate number will generally be
-//! smaller than the original, although there are exceptions, especially when working with negative values.
+//! **In total, this representation uses 24 bits**, but you can omit the `bool` if you are sure the number is positive,
+//! then **only 16 bits will be needed**. The approximate number will generally be smaller than the original,
+//! although there are exceptions, especially when working with negative values.
 //! For positive numbers, the approximation usually results in a slightly smaller value,
-//! but with negative numbers, the approximation could be either smaller or
-//! larger than the original (for example, a value of –88 might approximate to –88 or a slightly different value).
+//! but with negative numbers, the approximation could be either smaller or larger than the original.
 
 use num_traits::{CheckedRem, CheckedShl, PrimInt};
 use std::marker::PhantomData;
@@ -210,7 +208,15 @@ impl<T: SpecialBytes> SmallValue<T> {
         }
     }
 
-    /// Returns the bounds of this [`SmallValue<T>`].
+    /// Returns a tuple with the minimum and maximum values for this object.
+    ///
+    /// The minimum value (`min`) is calculated using the `approximate` method.
+    /// The maximum value (`max`) is calculated by creating a new object with an increased percentage value and calling the `approximate` method.
+    ///
+    /// It is guaranteed that the original number is not less than `min`, but also not greater than `max`.
+    /// However, there may be exceptions for negative numbers, and `min` or `max` can equal the maximum value of the chosen type.
+    /// For example, if the type `T` is `u32`, and the number is close to `u32::MAX`, then the boundary will be at `u32::MAX`.
+    ///
     pub fn bounds(&self) -> (T, T) {
         let min = self.approximate();
         (
