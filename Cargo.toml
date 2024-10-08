@@ -1,6 +1,6 @@
 [package]
 name = "approx_int"
-version = "1.1.1"
+version = "1.2.1"
 edition = "2021"
 description = "A compact representation of numbers using a tuple (u8, u8, bool) for efficient approximation and storage."
 repository = "https://github.com/m62624/approx_int"
