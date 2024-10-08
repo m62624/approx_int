@@ -17,7 +17,7 @@
 //! but with negative numbers, the approximation could be either smaller or
 //! larger than the original (for example, a value of –88 might approximate to –88 or a slightly different value).
 
-use num_traits::{CheckedShl, PrimInt};
+use num_traits::{CheckedRem, CheckedShl, PrimInt};
 use std::marker::PhantomData;
 use std::ops::{Add, Div, Mul, Rem, Sub};
 
@@ -32,7 +32,7 @@ pub struct SmallValue<T: SpecialBytes> {
 }
 
 /// The trait is used to determine the number of bits required to store a number
-pub trait SpecialBytes: PrimInt + Default + CheckedShl + std::fmt::Display {
+pub trait SpecialBytes: PrimInt + Default + CheckedShl + CheckedRem {
     /// Returns the number of bits required to store a number
     fn bits() -> u8;
 }
@@ -210,6 +210,15 @@ impl<T: SpecialBytes> SmallValue<T> {
         }
     }
 
+    /// Returns the bounds of this [`SmallValue<T>`].
+    pub fn bounds(&self) -> (T, T) {
+        let min = self.approximate();
+        (
+            min,
+            Self::from((self.min_bits, self.percent + 1, self.flag)).approximate(),
+        )
+    }
+
     /// Returns the minimum number of bits required to represent the number.
     #[cfg(not(tarpaulin_include))]
     pub fn min_bits(&self) -> u8 {
@@ -270,9 +279,26 @@ impl<T: SpecialBytes> From<(u8, u8, bool)> for SmallValue<T> {
     }
 }
 
+impl<T: SpecialBytes> From<(u8, u8)> for SmallValue<T> {
+    fn from((min_bits, percent): (u8, u8)) -> Self {
+        Self {
+            min_bits,
+            percent,
+            flag: false,
+            _phantom: PhantomData,
+        }
+    }
+}
+
 impl<T: SpecialBytes> From<SmallValue<T>> for (u8, u8, bool) {
     fn from(value: SmallValue<T>) -> Self {
         (value.min_bits, value.percent, value.flag)
+    }
+}
+
+impl<T: SpecialBytes> From<SmallValue<T>> for (u8, u8) {
+    fn from(value: SmallValue<T>) -> Self {
+        (value.min_bits, value.percent)
     }
 }
 
@@ -319,5 +345,43 @@ impl<T: SpecialBytes> Rem for SmallValue<T> {
 
     fn rem(self, rhs: Self) -> Self::Output {
         SmallValue::new(self.approximate() % rhs.approximate())
+    }
+}
+
+// wrapping, checked:  add,sub, mul, div, rem
+impl<T: SpecialBytes> SmallValue<T> {
+    /// Checked addition. Returns `None` if overflow occurred.
+    pub fn checked_add(&self, rhs: Self) -> Option<Self> {
+        self.approximate()
+            .checked_add(&rhs.approximate())
+            .map(Self::new)
+    }
+
+    /// Checked subtraction. Returns `None` if overflow occurred.
+    pub fn checked_sub(&self, rhs: Self) -> Option<Self> {
+        self.approximate()
+            .checked_sub(&rhs.approximate())
+            .map(Self::new)
+    }
+
+    /// Checked multiplication. Returns `None` if overflow occurred.
+    pub fn checked_mul(&self, rhs: Self) -> Option<Self> {
+        self.approximate()
+            .checked_mul(&rhs.approximate())
+            .map(Self::new)
+    }
+
+    /// Checked division. Returns `None` if the divisor is zero or if the result overflows.
+    pub fn checked_div(&self, rhs: Self) -> Option<Self> {
+        self.approximate()
+            .checked_div(&rhs.approximate())
+            .map(Self::new)
+    }
+
+    /// Checked remainder. Returns `None` if the divisor is zero or if the result overflows.
+    pub fn checked_rem(&self, rhs: Self) -> Option<Self> {
+        self.approximate()
+            .checked_rem(&rhs.approximate())
+            .map(Self::new)
     }
 }
