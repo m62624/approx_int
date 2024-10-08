@@ -57,3 +57,19 @@ fn bound_t_6() {
     let (min, max) = small_value.bounds();
     assert!(min < value && value < max);
 }
+
+#[test]
+fn bound_t_7() {
+    let value = i64::MIN + 10_000;
+    let small_value: SmallValue<i64> = value.into();
+    let (min, max) = small_value.bounds();
+    assert!(min < value && value < max);
+}
+
+#[test]
+fn bound_t_8() {
+    let value = u64::MIN + 10_000;
+    let small_value: SmallValue<u64> = value.into();
+    let (min, max) = small_value.bounds();
+    assert!(min < value && value < max);
+}
