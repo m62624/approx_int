@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.2.1] - 2024.10.08
+
+
+### Added
+
+- `checked` methods for safer arithmetic operations.
+- Bounds checking to ensure values stay within expected ranges.
+
+### Changed
+
+- Approximation of the lower bound for negative numbers.
+
+
 ## [1.1.1] - 2024.09.01
 
 ### Fixed
