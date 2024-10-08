@@ -198,8 +198,14 @@ impl<T: SpecialBytes> SmallValue<T> {
     /// // The approximate value: 8822848225945509419002221297664
     /// ```
     pub fn approximate(&self) -> T {
-        let abs_value =
-            Self::calculate_part_from_percentage(self.percent, Self::bit_pow(self.min_bits));
+        let abs_value = Self::calculate_part_from_percentage(
+            if self.flag {
+                self.percent.saturating_add(1)
+            } else {
+                self.percent
+            },
+            Self::bit_pow(self.min_bits),
+        );
 
         if self.flag {
             T::zero() - abs_value
@@ -220,13 +226,22 @@ impl<T: SpecialBytes> SmallValue<T> {
     ///
     pub fn bounds(&self) -> (T, T) {
         let min = self.approximate();
-        let max = Self::from((self.min_bits, self.percent + 1, self.flag)).approximate();
+        let max = Self::from((
+            self.min_bits,
+            if self.flag {
+                self.percent.saturating_sub(2)
+            } else {
+                self.percent.saturating_add(1)
+            },
+            self.flag,
+        ))
+        .approximate();
 
-        if self.flag {
-            (max, min)
-        } else {
-            (min, max)
-        }
+        // if self.flag {
+        // (max, min)
+        // } else {
+        (min, max)
+        // }
     }
 
     /// Returns the minimum number of bits required to represent the number.
